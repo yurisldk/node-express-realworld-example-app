@@ -1,74 +1,41 @@
-# ![Node/Express/Prisma Example App](project-logo.png)
+# Configuration and Solution for RealWorld Backend Challenges
 
-[![Build Status](https://travis-ci.org/anishkny/node-express-realworld-example-app.svg?branch=master)](https://travis-ci.org/anishkny/node-express-realworld-example-app)
+This repository provides a solution for developers working on the RealWorld application. Due to recent changes in the [RealWorld API specifications](https://github.com/gothinkster/realworld/issues/1611), the official API server has been deleted, and the demo deployment is no longer available. As a result, developers relying on this backend have encountered issues.
 
-> ### Example Node (Express + Prisma) codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld-example-apps) API spec.
+This repository addresses these challenges by providing an alternative backend solution. It offers full compatibility with the updated RealWorld API specifications and can be used to keep your project running smoothly.
 
-<a href="https://thinkster.io/tutorials/node-json-api" target="_blank"><img width="454" src="https://raw.githubusercontent.com/gothinkster/realworld/master/media/learn-btn-hr.png" /></a>
+This fork was created specifically for use with the [RealWorld React FSD project](https://github.com/yurisldk/realworld-react-fsd), providing a seamless backend implementation for that frontend.
 
-## Getting Started
+## Features of this Fork
 
-### Prerequisites
+### 1. Predefined `.env` Configuration
 
-Run the following command to install dependencies:
+This project includes a predefined `.env` file to quickly set up a local development environment. The file contains necessary environment variables, such as the database URL and JWT secret. It is **also connected to the `docker-compose.yml` file**, ensuring that both local and containerized environments are properly configured.
 
-```shell
-npm install
-```
+However, **do not commit this file to version control** as it contains sensitive information like the JWT secret. **Always add `.env` to your `.gitignore` file** before committing any changes. While it is provided for convenience to get started quickly, you should generate your own environment files for use in production or other environments.
 
-### Environment variables
+### 2. Predefined `docker-compose.yml` Configuration
 
-This project depends on some environment variables.
-If you are running this project locally, create a `.env` file at the root for these variables.
-Your host provider should included a feature to set them there directly to avoid exposing them.
+In addition to the `.env` file, this project includes a predefined `docker-compose.yml` file. This configuration allows you to easily set up a containerized environment for your development and testing. It ensures that the necessary services, such as the database and application server, are configured and ready to run with a single command.
 
-Here are the required ones:
+The `docker-compose.yml` file is pre-configured to work with Docker, simplifying the process of running the project in an isolated containerized environment. It also integrates smoothly with the `.env` file to set environment variables for the containers.
 
-```
-DATABASE_URL=
-JWT_SECRET=
-NODE_ENV=production
-```
+### 3. Database Seeding
 
-### Generate your Prisma client
+This project includes a **database seeding script** that initializes the database with default data to make development and testing easier.
 
-Run the following command to generate the Prisma Client which will include types based on your database schema:
+## ![Node/Express/Prisma Example App](project-logo.png)
 
-```shell
-npx prisma generate
-```
+### Example Node (Express + Prisma) codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld-example-apps) API spec.
 
-### Apply any SQL migration script
+## Getting started
 
-Run the following command to create/update your database based on existing sql migration scripts:
+### On the first run
 
-```shell
-npx prisma migrate deploy
-```
+1. Run `yarn install` to install the dependencies
+2. To update the database in development mode use `yarn docker:start`
+3. To run the development version `yarn start`
 
-### Run the project
+### On the other runs
 
-Run the following command to run the project:
-
-```shell
-npx nx serve api
-```
-
-### Seed the database
-
-The project includes a seed script to populate the database:
-
-```shell
-npx prisma db seed
-```
-
-## Deploy on a remote server
-
-Run the following command to:
-- install dependencies
-- apply any new migration sql scripts
-- run the server
-
-```shell
-npm ci && npx prisma migrate deploy && node dist/api/main.js
-```
+1. To run the development version `yarn start`
