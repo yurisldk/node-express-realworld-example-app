@@ -1,66 +1,112 @@
-import {
-  randEmail,
-  randFullName,
-  randLines,
-  randParagraph,
-  randPassword, randPhrase,
-  randWord
-} from '@ngneat/falso';
 import { PrismaClient } from '@prisma/client';
-import { RegisteredUser } from '../app/routes/auth/registered-user.model';
-import { createUser } from '../app/routes/auth/auth.service';
-import { addComment, createArticle } from '../app/routes/article/article.service';
+import { faker } from '@faker-js/faker';
 
 const prisma = new PrismaClient();
 
-export const generateUser = async (): Promise<RegisteredUser> =>
-  createUser({
-    username: randFullName(),
-    email: randEmail(),
-    password: randPassword(),
-    image: 'https://api.realworld.io/images/demo-avatar.png',
-    demo: true,
-  });
+async function main() {
+  console.log('Seeding database...');
 
-export const generateArticle = async (id: number) =>
-  createArticle(
-    {
-      title: randPhrase(),
-      description: randParagraph(),
-      body: randLines({ length: 10 }).join(' '),
-      tagList: randWord({ length: 4 }),
-    },
-    id,
+  const tagNames = ['tech', 'health', 'science', 'travel', 'sports'];
+  const tags = await Promise.all(
+    tagNames.map((name) =>
+      prisma.tag.upsert({
+        where: { name },
+        update: {},
+        create: { name },
+      })
+    )
   );
 
-export const generateComment = async (id: number, slug: string) =>
-  addComment(randParagraph(), slug, id);
+  const users = await Promise.all(
+    Array.from({ length: 10 }).map(() =>
+      prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          username: faker.internet.username(),
+          password: faker.internet.password(),
+          image: faker.image.avatar(),
+          bio: faker.lorem.sentence(),
+          demo: true,
+        },
+      })
+    )
+  );
 
-const main = async () => {
-  try {
-    const users = await Promise.all(Array.from({length: 12}, () => generateUser()));
-    users?.map(user => user);
+  const articles = await Promise.all(
+    users.flatMap((user) =>
+      Array.from({ length: 10 }).map(() =>
+        prisma.article.create({
+          data: {
+            slug: faker.lorem.slug(),
+            title: faker.lorem.sentence(),
+            description: faker.lorem.sentences(2),
+            body: faker.lorem.paragraphs(3),
+            authorId: user.id,
+            tagList: {
+              connect: [
+                { name: tags[Math.floor(Math.random() * tags.length)].name },
+              ],
+            },
+          },
+        })
+      )
+    )
+  );
 
-    // eslint-disable-next-line no-restricted-syntax
-    for await (const user of users) {
-      const articles = await Promise.all(Array.from({length: 12}, () => generateArticle(user.id)));
+  await Promise.all(
+    articles.flatMap((article) =>
+      users.map((user) =>
+        prisma.comment.create({
+          data: {
+            body: faker.lorem.sentences(2),
+            articleId: article.id,
+            authorId: user.id,
+          },
+        })
+      )
+    )
+  );
 
-      // eslint-disable-next-line no-restricted-syntax
-      for await (const article of articles) {
-        await Promise.all(users.map(userItem => generateComment(userItem.id, article.slug)));
-      }
-    }
-  } catch (e) {
-    console.error(e);
+  for (const user of users) {
+    const followTargets = users.filter((u) => u.id !== user.id);
+    const followCount = faker.number.int({ min: 3, max: 5 });
 
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        following: {
+          connect: followTargets
+            .sort(() => 0.5 - Math.random())
+            .slice(0, followCount)
+            .map((u) => ({ id: u.id })),
+        },
+      },
+    });
   }
-};
+
+  for (const user of users) {
+    const favoriteArticles = articles
+      .sort(() => 0.5 - Math.random())
+      .slice(0, faker.number.int({ min: 5, max: 15 }));
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        favorites: {
+          connect: favoriteArticles.map((article) => ({ id: article.id })),
+        },
+      },
+    });
+  }
+
+  console.log('Database seeding completed!');
+}
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async () => {
-    await prisma.$disconnect();
+  .catch((error) => {
+    console.error('Error seeding database:', error);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });
