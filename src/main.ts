@@ -10,6 +10,26 @@ const app = express();
  * App Configuration
  */
 
+if (process.env.NODE_ENV === "development") {
+  app.use((req, _res, next) => {
+    const minDelay = parseInt(process.env.MIN_REQUEST_DELAY_MS || "700", 10);
+    const maxDelay = parseInt(process.env.MAX_REQUEST_DELAY_MS || "3000", 10);
+
+    const delayTime =
+      Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+
+    const timeout = setTimeout(() => {
+      if (!req.destroyed) {
+        next();
+      }
+    }, delayTime);
+
+    req.on("close", () => {
+      clearTimeout(timeout);
+    });
+  });
+}
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
