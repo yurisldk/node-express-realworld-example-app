@@ -6,36 +6,52 @@ This repository addresses these challenges by providing an alternative backend s
 
 This fork was created specifically for use with the [RealWorld React FSD project](https://github.com/yurisldk/realworld-react-fsd), providing a seamless backend implementation for that frontend.
 
-## Features of this Fork
-
-### 1. Predefined `.env` Configuration
-
-This project includes a predefined `.env` file to quickly set up a local development environment. The file contains necessary environment variables, such as the database URL and JWT secret. It is **also connected to the `docker-compose.yml` file**, ensuring that both local and containerized environments are properly configured.
-
-However, **do not commit this file to version control** as it contains sensitive information like the JWT secret. **Always add `.env` to your `.gitignore` file** before committing any changes. While it is provided for convenience to get started quickly, you should generate your own environment files for use in production or other environments.
-
-### 2. Predefined `docker-compose.yml` Configuration
-
-In addition to the `.env` file, this project includes a predefined `docker-compose.yml` file. This configuration allows you to easily set up a containerized environment for your development and testing. It ensures that the necessary services, such as the database and application server, are configured and ready to run with a single command.
-
-The `docker-compose.yml` file is pre-configured to work with Docker, simplifying the process of running the project in an isolated containerized environment. It also integrates smoothly with the `.env` file to set environment variables for the containers.
-
-### 3. Database Seeding
-
-This project includes a **database seeding script** that initializes the database with default data to make development and testing easier.
-
 ## ![Node/Express/Prisma Example App](project-logo.png)
 
 ### Example Node (Express + Prisma) codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld-example-apps) API spec.
 
 ## Getting started
 
-### On the first run
+To get the backend running locally:
 
-1. Run `yarn install` to install the dependencies
-2. To update the database in development mode use `yarn docker:start`
-3. To run the development version `yarn start`
+1. Clone this repo
+2. Ensure you have a running PostgreSQL instance (e.g. via Docker or local installation)
+3. `yarn install` to install all the dependencies defined in a `package.json` file
+4. `yarn dev` to start the development server
 
-### On the other runs
+## Scripts
 
-1. To run the development version `yarn start`
+- `yarn dev` — Starts the full development environment: Docker containers, database migrations + seed, and Nx server.
+- `yarn build` — Builds the project using Nx.
+- `yarn test` — Runs unit tests using Nx.
+- `yarn docker:up` — Starts Docker containers in detached mode.
+- `yarn docker:down` — Stops Docker containers, removes volumes and orphan containers.
+- `yarn migrate` — Applies all pending Prisma database migrations.
+- `yarn seed` — Seeds the database if not already seeded (`.seed_done` marker).
+- `yarn init:db` — Initializes the database: applies migrations and seeds.
+- `yarn reset:db` — Fully resets and reinitializes the database from scratch.
+
+## 🧪 Demo Environment
+
+You can run both the frontend (this repo) and the backend ([node-express-realworld-example-app](https://github.com/yurisldk/node-express-realworld-example-app)) together using Docker Compose.
+
+A demo setup is available in [`ops/deploy/demo`](./ops/deploy/demo), which includes preconfigured services:
+  
+- Frontend (React app)
+- Backend API (Node.js + Express + Prisma)
+- PostgreSQL database
+- PgAdmin for DB inspection
+
+### Run the fullstack demo
+
+Make sure Docker is installed, then from the project root run:
+
+```bash
+docker-compose -f ops/deploy/demo/docker-compose.yml --env-file ops/deploy/demo/.env up --build -d
+```
+
+Once started, you can access:
+
+- Frontend: http://localhost:30401
+- API: http://localhost:30400
+- PgAdmin: http://localhost:30433
