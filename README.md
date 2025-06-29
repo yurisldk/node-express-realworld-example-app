@@ -1,57 +1,65 @@
-# Configuration and Solution for RealWorld Backend Challenges
+# RealWorld Backend — Node/Express/Prisma
 
-This repository provides a solution for developers working on the RealWorld application. Due to recent changes in the [RealWorld API specifications](https://github.com/gothinkster/realworld/issues/1611), the official API server has been deleted, and the demo deployment is no longer available. As a result, developers relying on this backend have encountered issues.
+![Node/Express/Prisma Example App](project-logo.png)
 
-This repository addresses these challenges by providing an alternative backend solution. It offers full compatibility with the updated RealWorld API specifications and can be used to keep your project running smoothly.
+## Description
 
-This fork was created specifically for use with the [RealWorld React FSD project](https://github.com/yurisldk/realworld-react-fsd), providing a seamless backend implementation for that frontend.
+A full-featured backend implementation of the RealWorld API specification using Node.js (Express), Prisma ORM, and PostgreSQL. Supports CRUD, authentication, tests, migrations, and Docker deployment. Serves as the backend for [realworld-react-fsd](https://github.com/yurisldk/realworld-react-fsd).
 
-## ![Node/Express/Prisma Example App](project-logo.png)
+## Technologies
 
-### Example Node (Express + Prisma) codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld-example-apps) API spec.
+- Node.js, Express
+- TypeScript
+- Prisma ORM
+- PostgreSQL
+- Nx (monorepo)
+- Jest (unit/e2e tests)
+- Docker, Docker Compose
+- Makefile
 
-## Getting started
+## Directory Structure
 
-To get the backend running locally:
+- `src/app/routes/` — main routes (article, auth, profile, tag)
+- `src/prisma/` — Prisma schema, migrations, client
+- `src/tests/` — unit tests for services
+- `e2e/` — e2e tests (Jest)
+- `ops/deploy/` — Dockerfile, docker-compose, deployment scripts
+- `assets/` — static files
 
-1. Clone this repo
-2. Ensure you have a running PostgreSQL instance (e.g. via Docker or local installation)
-3. `yarn install` to install all the dependencies defined in a `package.json` file
-4. `yarn dev` to start the development server
+## Environment Variables (`.env`)
 
-## Scripts
+```text
+DATABASE_URL=postgresql://myuser:mypassword@localhost:30432/mydb
+JWT_SECRET=theSecretForCreatingTheJWT
+NODE_ENV=development
+PORT=3000
+MIN_REQUEST_DELAY_MS=250
+MAX_REQUEST_DELAY_MS=500
+TEST_UTILS_TOKEN=foo.bar.baz
+```
 
-- `yarn dev` — Starts the full development environment: Docker containers, database migrations + seed, and Nx server.
-- `yarn build` — Builds the project using Nx.
-- `yarn test` — Runs unit tests using Nx.
-- `yarn docker:up` — Starts Docker containers in detached mode.
-- `yarn docker:down` — Stops Docker containers, removes volumes and orphan containers.
-- `yarn migrate` — Applies all pending Prisma database migrations.
-- `yarn seed` — Seeds the database if not already seeded (`.seed_done` marker).
-- `yarn init:db` — Initializes the database: applies migrations and seeds.
-- `yarn reset:db` — Fully resets and reinitializes the database from scratch.
+## Quick Start (Local)
 
-## 🧪 Demo Environment
+```bash
+yarn install
+# Start PostgreSQL (locally or via Docker)
+yarn migrate         # apply Prisma migrations
+yarn db:seed         # seed test data (optional)
+yarn dev             # start the server
+```
 
-You can run both the frontend (this repo) and the backend ([node-express-realworld-example-app](https://github.com/yurisldk/node-express-realworld-example-app)) together using Docker Compose.
-
-A demo setup is available in [`ops/deploy/demo`](./ops/deploy/demo), which includes preconfigured services:
-  
-- Frontend (React app)
-- Backend API (Node.js + Express + Prisma)
-- PostgreSQL database
-- PgAdmin for DB inspection
-
-### Run the fullstack demo
-
-Make sure Docker is installed, then from the project root run:
+## Docker Compose (Full Stack)
 
 ```bash
 docker-compose -f ops/deploy/demo/docker-compose.yml --env-file ops/deploy/demo/.env up --build -d
 ```
 
-Once started, you can access:
-
 - Frontend: http://localhost:30401
 - API: http://localhost:30400
 - PgAdmin: http://localhost:30433
+
+## Links & Contacts
+
+- [RealWorld API Spec](https://github.com/gothinkster/realworld/tree/main/api)
+- [Frontend](https://github.com/yurisldk/realworld-react-fsd)
+- [Issue tracker](https://github.com/yurisldk/node-express-realworld-example-app/issues)
