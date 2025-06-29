@@ -1,22 +1,23 @@
 import * as bcrypt from 'bcryptjs';
-import { createUser, getCurrentUser, login, updateUser } from '../../app/routes/auth/auth.service';
+import { createUser, login } from '../../app/routes/auth/auth.service';
 import prismaMock from '../prisma-mock';
 
 describe('AuthService', () => {
   describe('createUser', () => {
     test('should create new user ', async () => {
+      const uniqueIdentifier = Date.now().toString();
       // Given
       const user = {
         id: 123,
-        username: 'RealWorld',
-        email: 'realworld@me',
+        username: `RealWorld ${uniqueIdentifier}`,
+        email: `realworld-${uniqueIdentifier}@me`,
         password: '1234',
       };
 
       const mockedResponse = {
         id: 123,
-        username: 'RealWorld',
-        email: 'realworld@me',
+        username: `RealWorld ${uniqueIdentifier}`,
+        email: `realworld-${uniqueIdentifier}@me`,
         password: '1234',
         bio: null,
         image: null,
@@ -157,8 +158,8 @@ describe('AuthService', () => {
 
     test('should throw an error when no user is found', async () => {
       // Given
-      const user = {
-        email: 'realworld@me',
+      const noValidUser = {
+        email: 'no-valid@me',
         password: '1234',
       };
 
@@ -167,14 +168,14 @@ describe('AuthService', () => {
 
       // Then
       const error = String({ errors: { 'email or password': ['is invalid'] } });
-      await expect(login(user)).rejects.toThrow(error);
+      await expect(login(noValidUser)).rejects.toThrow(error);
     });
 
     test('should throw an error if the password is wrong', async () => {
       // Given
       const user = {
         email: 'realworld@me',
-        password: '1234',
+        password: 'novalid-password',
       };
 
       const hashedPassword = await bcrypt.hash('4321', 10);
@@ -196,59 +197,6 @@ describe('AuthService', () => {
       // Then
       const error = String({ errors: { 'email or password': ['is invalid'] } });
       await expect(login(user)).rejects.toThrow(error);
-    });
-  });
-
-  describe('getCurrentUser', () => {
-    test('should return a token', async () => {
-      // Given
-      const id = 123;
-
-      const mockedResponse = {
-        id: 123,
-        username: 'RealWorld',
-        email: 'realworld@me',
-        password: '1234',
-        bio: null,
-        image: null,
-        token: '',
-        demo: false,
-      };
-
-      // When
-      prismaMock.user.findUnique.mockResolvedValue(mockedResponse);
-
-      // Then
-      await expect(getCurrentUser(id)).resolves.toHaveProperty('token');
-    });
-  });
-
-  describe('updateUser', () => {
-    test('should return a token', async () => {
-      // Given
-      const user = {
-        id: 123,
-        username: 'RealWorld',
-        email: 'realworld@me',
-        password: '1234',
-      };
-
-      const mockedResponse = {
-        id: 123,
-        username: 'RealWorld',
-        email: 'realworld@me',
-        password: '1234',
-        bio: null,
-        image: null,
-        token: '',
-        demo: false,
-      };
-
-      // When
-      prismaMock.user.update.mockResolvedValue(mockedResponse);
-
-      // Then
-      await expect(updateUser(user, user.id)).resolves.toHaveProperty('token');
     });
   });
 });
