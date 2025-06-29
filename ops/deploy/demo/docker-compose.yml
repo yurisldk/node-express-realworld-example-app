@@ -29,7 +29,7 @@ services:
     container_name: api
     platform: linux/amd64
     environment:
-      DATABASE_URL: ${DB_URL}
+      DATABASE_URL: postgresql://${DB_USERNAME}:${DB_PASSWORD}@db:${DB_PORT_INTERNAL}/${DB_NAME}
       JWT_SECRET: ${API_JWT_SECRET}
       NODE_ENV: ${API_NODE_ENV}
       PORT: ${API_PORT_INTERNAL}
