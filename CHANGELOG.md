@@ -1,5 +1,11 @@
 # Versions
 
+## 1.1.1 (2025-06-29)
+
+### 🐛 Bug Fixes
+
+- Temporarily skipped test step in CI/CD workflow
+
 ## 1.1.0 (2025-06-29)
 
 ### 🐛 Bug Fixes
