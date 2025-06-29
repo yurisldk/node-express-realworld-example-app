@@ -1,9 +1,17 @@
 #!/bin/sh
 set -e
 
-echo "⏳ Waiting for database to be ready..."
-until nc -z db 5432; do
-  echo "Waiting for database..."
+if [ -n "$DATABASE_URL" ]; then
+  DB_HOST=$(echo "$DATABASE_URL" | sed -E 's|.*://[^@]*@([^:/]+):([0-9]+).*|\1|')
+  DB_PORT=$(echo "$DATABASE_URL" | sed -E 's|.*://[^@]*@([^:/]+):([0-9]+).*|\2|')
+else
+  DB_HOST="${HOST:-db}"
+  DB_PORT="${PORT:-5432}"
+fi
+
+echo "⏳ Waiting for database at $DB_HOST:$DB_PORT..."
+until nc -z "$DB_HOST" "$DB_PORT"; do
+  echo "⏳ Waiting for database at $DB_HOST:$DB_PORT..."
   sleep 1
 done
 
@@ -12,14 +20,6 @@ npx prisma migrate deploy
 
 echo "🌱 Generating Prisma client..."
 npx prisma generate
-
-if [ ! -f .seed_done ]; then
-  echo "🌱 Running seed script..."
-  npx prisma db seed
-  touch .seed_done
-else
-  echo "✅ Seed already applied, skipping."
-fi
 
 echo "▶️ Starting application..."
 exec node api

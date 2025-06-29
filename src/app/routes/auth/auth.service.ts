@@ -5,7 +5,6 @@ import HttpException from '../../models/http-exception.model';
 import { RegisteredUser } from './registered-user.model';
 import generateToken from './token.utils';
 import { User } from './user.model';
-import { faker } from '@faker-js/faker';
 
 const checkUserUniqueness = async (email: string, username: string) => {
   const existingUserByEmail = await prisma.user.findUnique({
@@ -40,8 +39,8 @@ export const createUser = async (input: RegisterInput): Promise<RegisteredUser> 
   const email = input.email?.trim();
   const username = input.username?.trim();
   const password = input.password?.trim();
-  const image = faker.image.avatar();
-  const { bio, demo } = input;
+  const image = `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`;
+  const { bio, demo = false } = input;
 
   if (!email) {
     throw new HttpException(422, { errors: { email: ["can't be blank"] } });
