@@ -10,25 +10,27 @@ const app = express();
  * App Configuration
  */
 
-if (process.env.NODE_ENV === "development") {
-  app.use((req, _res, next) => {
-    const minDelay = parseInt(process.env.MIN_REQUEST_DELAY_MS || "700", 10);
-    const maxDelay = parseInt(process.env.MAX_REQUEST_DELAY_MS || "3000", 10);
+app.use((req, res, next) => {
+  const minDelay = parseInt(process.env.MIN_REQUEST_DELAY_MS || '700', 10);
+  const maxDelay = parseInt(process.env.MAX_REQUEST_DELAY_MS || '3000', 10);
 
-    const delayTime =
-      Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+  const delayTime =
+    Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
 
-    const timeout = setTimeout(() => {
-      if (!req.destroyed) {
-        next();
-      }
-    }, delayTime);
+  const timeout = setTimeout(() => {
+    if (!req.destroyed && !res.headersSent) {
+      next();
+    }
+  }, delayTime);
 
-    req.on("close", () => {
-      clearTimeout(timeout);
-    });
+  req.on('aborted', () => {
+    clearTimeout(timeout);
   });
-}
+
+  res.on('close', () => {
+    clearTimeout(timeout);
+  });
+});
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -48,7 +50,7 @@ app.use(
     err: Error | HttpException,
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction,
+    next: express.NextFunction
   ) => {
     // @ts-ignore
     if (err && err.name === 'UnauthorizedError') {
@@ -63,7 +65,7 @@ app.use(
     } else if (err) {
       res.status(500).json(err.message);
     }
-  },
+  }
 );
 
 /**

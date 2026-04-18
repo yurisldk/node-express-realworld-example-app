@@ -5,8 +5,8 @@ if [ -n "$DATABASE_URL" ]; then
   DB_HOST=$(echo "$DATABASE_URL" | sed -E 's|.*://[^@]*@([^:/]+):([0-9]+).*|\1|')
   DB_PORT=$(echo "$DATABASE_URL" | sed -E 's|.*://[^@]*@([^:/]+):([0-9]+).*|\2|')
 else
-  DB_HOST="${HOST:-db}"
-  DB_PORT="${PORT:-5432}"
+  DB_HOST="${DB_HOST:-db}"
+  DB_PORT="${DB_PORT:-5432}"
 fi
 
 echo "⏳ Waiting for database at $DB_HOST:$DB_PORT..."

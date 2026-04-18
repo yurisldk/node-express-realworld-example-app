@@ -1,6 +1,28 @@
 import * as bcrypt from 'bcryptjs';
-import { createUser, login } from '../../app/routes/auth/auth.service';
 import prismaMock from '../prisma-mock';
+import {
+  createUser,
+  login,
+  updateUser,
+} from '../../app/routes/auth/auth.service';
+
+const prismaUserMock = prismaMock.user as unknown as {
+  create: unknown;
+  update: unknown;
+  findUnique: unknown;
+};
+
+const mockResolvedValue = <T>(mockFn: unknown, value: T) => {
+  (mockFn as { mockResolvedValue: (mockValue: T) => void }).mockResolvedValue(
+    value
+  );
+};
+
+const mockResolvedValueOnce = <T>(mockFn: unknown, value: T) => {
+  (
+    mockFn as { mockResolvedValueOnce: (mockValue: T) => void }
+  ).mockResolvedValueOnce(value);
+};
 
 describe('AuthService', () => {
   describe('createUser', () => {
@@ -26,8 +48,7 @@ describe('AuthService', () => {
       };
 
       // When
-      // @ts-ignore
-      prismaMock.user.create.mockResolvedValue(mockedResponse);
+      mockResolvedValue(prismaUserMock.create, mockedResponse);
 
       // Then
       await expect(createUser(user)).resolves.toHaveProperty('token');
@@ -96,7 +117,7 @@ describe('AuthService', () => {
       };
 
       // When
-      prismaMock.user.findUnique.mockResolvedValue(mockedExistingUser);
+      mockResolvedValue(prismaUserMock.findUnique, mockedExistingUser);
 
       // Then
       const error = { email: ['has already been taken'] }.toString();
@@ -126,7 +147,7 @@ describe('AuthService', () => {
       };
 
       // When
-      prismaMock.user.findUnique.mockResolvedValue(mockedResponse);
+      mockResolvedValue(prismaUserMock.findUnique, mockedResponse);
 
       // Then
       await expect(login(user)).resolves.toHaveProperty('token');
@@ -164,7 +185,7 @@ describe('AuthService', () => {
       };
 
       // When
-      prismaMock.user.findUnique.mockResolvedValue(null);
+      mockResolvedValue(prismaUserMock.findUnique, null);
 
       // Then
       const error = String({ errors: { 'email or password': ['is invalid'] } });
@@ -192,11 +213,83 @@ describe('AuthService', () => {
       };
 
       // When
-      prismaMock.user.findUnique.mockResolvedValue(mockedResponse);
+      mockResolvedValue(prismaUserMock.findUnique, mockedResponse);
 
       // Then
       const error = String({ errors: { 'email or password': ['is invalid'] } });
       await expect(login(user)).rejects.toThrow(error);
+    });
+  });
+
+  describe('updateUser', () => {
+    test('should update user without checking uniqueness for omitted fields', async () => {
+      const updatedUser = {
+        id: 123,
+        username: 'RealWorld',
+        email: 'realworld@me',
+        bio: 'Updated bio',
+        image: null,
+      };
+
+      mockResolvedValue(prismaUserMock.update, updatedUser);
+
+      await expect(
+        updateUser({ bio: 'Updated bio' }, 123)
+      ).resolves.toHaveProperty('token');
+      expect(prismaUserMock.findUnique).not.toHaveBeenCalled();
+    });
+
+    test('should allow updating when email and username belong to the same user', async () => {
+      const updatedUser = {
+        id: 123,
+        username: 'RealWorld',
+        email: 'realworld@me',
+        bio: null,
+        image: null,
+      };
+
+      mockResolvedValueOnce(prismaUserMock.findUnique, { id: 123 } as never);
+      mockResolvedValueOnce(prismaUserMock.findUnique, { id: 123 } as never);
+      mockResolvedValue(prismaUserMock.update, updatedUser);
+
+      await expect(
+        updateUser({ email: 'realworld@me', username: 'RealWorld' }, 123)
+      ).resolves.toHaveProperty('token');
+    });
+
+    test('should throw an error when updating user with already existing email', async () => {
+      mockResolvedValueOnce(prismaUserMock.findUnique, { id: 999 } as never);
+
+      const error = String({ errors: { email: ['has already been taken'] } });
+      await expect(updateUser({ email: 'realworld@me' }, 123)).rejects.toThrow(
+        error
+      );
+    });
+
+    test('should throw an error when updating user with already existing username', async () => {
+      mockResolvedValueOnce(prismaUserMock.findUnique, { id: 999 } as never);
+
+      const error = String({
+        errors: { username: ['has already been taken'] },
+      });
+      await expect(updateUser({ username: 'RealWorld' }, 123)).rejects.toThrow(
+        error
+      );
+    });
+
+    test('should throw an error when updating user with already existing email and username', async () => {
+      mockResolvedValueOnce(prismaUserMock.findUnique, { id: 999 } as never);
+      mockResolvedValueOnce(prismaUserMock.findUnique, { id: 998 } as never);
+
+      const error = String({
+        errors: {
+          email: ['has already been taken'],
+          username: ['has already been taken'],
+        },
+      });
+      await expect(
+        updateUser({ email: 'realworld@me', username: 'RealWorld' }, 123)
+      ).rejects.toThrow(error);
     });
   });
 });

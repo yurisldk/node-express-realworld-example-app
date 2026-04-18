@@ -1,41 +1,56 @@
 import * as bcrypt from 'bcryptjs';
+import { LoginInput } from './login-input.model';
 import { RegisterInput } from './register-input.model';
+import { UpdateUserInput } from './update-user-input.model';
 import prisma from '../../../prisma/prisma-client';
 import HttpException from '../../models/http-exception.model';
 import { RegisteredUser } from './registered-user.model';
 import generateToken from './token.utils';
 import { User } from './user.model';
 
-const checkUserUniqueness = async (email: string, username: string) => {
-  const existingUserByEmail = await prisma.user.findUnique({
-    where: {
-      email,
-    },
-    select: {
-      id: true,
-    },
-  });
+type CheckUserUniquenessParams = {
+  email?: string;
+  username?: string;
+  excludeUserId?: number;
+};
 
-  const existingUserByUsername = await prisma.user.findUnique({
-    where: {
-      username,
-    },
-    select: {
-      id: true,
-    },
-  });
+const checkUserUniqueness = async ({
+  email,
+  username,
+  excludeUserId,
+}: CheckUserUniquenessParams) => {
+  const existingUserByEmail = email
+    ? await prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      })
+    : null;
 
-  if (existingUserByEmail || existingUserByUsername) {
+  const existingUserByUsername = username
+    ? await prisma.user.findUnique({
+        where: { username },
+        select: { id: true },
+      })
+    : null;
+
+  const emailTaken =
+    existingUserByEmail && existingUserByEmail.id !== excludeUserId;
+  const usernameTaken =
+    existingUserByUsername && existingUserByUsername.id !== excludeUserId;
+
+  if (emailTaken || usernameTaken) {
     throw new HttpException(422, {
       errors: {
-        ...(existingUserByEmail ? { email: ['has already been taken'] } : {}),
-        ...(existingUserByUsername ? { username: ['has already been taken'] } : {}),
+        ...(emailTaken ? { email: ['has already been taken'] } : {}),
+        ...(usernameTaken ? { username: ['has already been taken'] } : {}),
       },
     });
   }
 };
 
-export const createUser = async (input: RegisterInput): Promise<RegisteredUser> => {
+export const createUser = async (
+  input: RegisterInput
+): Promise<RegisteredUser> => {
   const email = input.email?.trim();
   const username = input.username?.trim();
   const password = input.password?.trim();
@@ -54,7 +69,7 @@ export const createUser = async (input: RegisterInput): Promise<RegisteredUser> 
     throw new HttpException(422, { errors: { password: ["can't be blank"] } });
   }
 
-  await checkUserUniqueness(email, username);
+  await checkUserUniqueness({ email, username });
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -82,7 +97,7 @@ export const createUser = async (input: RegisterInput): Promise<RegisteredUser> 
   };
 };
 
-export const login = async (userPayload: any) => {
+export const login = async (userPayload: LoginInput) => {
   const email = userPayload.email?.trim();
   const password = userPayload.password?.trim();
 
@@ -149,13 +164,19 @@ export const getCurrentUser = async (id: number) => {
   };
 };
 
-export const updateUser = async (userPayload: any, id: number) => {
+export const updateUser = async (userPayload: UpdateUserInput, id: number) => {
   const { email, username, password, image, bio } = userPayload;
   let hashedPassword;
 
   if (password) {
     hashedPassword = await bcrypt.hash(password, 10);
   }
+
+  await checkUserUniqueness({
+    ...(email ? { email } : {}),
+    ...(username ? { username } : {}),
+    excludeUserId: id,
+  });
 
   const user = await prisma.user.update({
     where: {

@@ -23,7 +23,7 @@ COPY --from=builder /app/src/prisma ./src/prisma
 
 RUN chown -R api:api /app
 
-COPY ops/deploy/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 USER api

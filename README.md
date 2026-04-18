@@ -23,40 +23,64 @@ A full-featured backend implementation of the RealWorld API specification using 
 - `src/prisma/` — Prisma schema, migrations, client
 - `src/tests/` — unit tests for services
 - `e2e/` — e2e tests (Jest)
-- `ops/deploy/` — Dockerfile, docker-compose, deployment scripts
 - `assets/` — static files
-
-## Environment Variables (`.env`)
-
-```text
-DATABASE_URL=postgresql://myuser:mypassword@localhost:30432/mydb
-JWT_SECRET=theSecretForCreatingTheJWT
-NODE_ENV=development
-PORT=3000
-MIN_REQUEST_DELAY_MS=250
-MAX_REQUEST_DELAY_MS=500
-TEST_UTILS_TOKEN=foo.bar.baz
-```
 
 ## Quick Start (Local)
 
+Install dependencies:
+
 ```bash
 yarn install
-# Start PostgreSQL (locally or via Docker)
-yarn migrate         # apply Prisma migrations
-yarn db:seed         # seed test data (optional)
-yarn dev             # start the server
 ```
 
-## Docker Compose (Full Stack)
+Run locally:
 
 ```bash
-docker-compose -f ops/deploy/demo/docker-compose.yml --env-file ops/deploy/demo/.env up --build -d
+yarn migrate
+yarn dev
 ```
 
-- Frontend: http://localhost:30401
+Seed demo data after the API is already running:
+
+```bash
+yarn db:seed
+```
+
+- API: `http://localhost:30400/api`
+
+## Docker Compose
+
+Start locally with Docker:
+
+```bash
+docker compose --env-file .env.compose up -d --build
+```
+
 - API: http://localhost:30400
 - PgAdmin: http://localhost:30433
+- PostgreSQL: localhost:30432
+
+Local backend and Docker backend use the same API URL: `http://localhost:30400/api`.
+
+Stop:
+
+```bash
+docker compose --env-file .env.compose down
+```
+
+Seed demo data against the configured database:
+
+```bash
+yarn db:seed
+```
+
+## Deployment
+
+Build image:
+
+```bash
+docker build -t realworld-api .
+```
 
 ## Links & Contacts
 

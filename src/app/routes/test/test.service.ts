@@ -23,11 +23,9 @@ export async function seedDatabase(): Promise<void> {
   const maxuser = await createUser({ email: 'maxuser@example.com', username: 'max_user', password, bio: 'Max user bio', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=max_user', demo: true });
   await createUser({ email: 'minuser@example.com', username: 'min_user', password, bio: '', image: '', demo: true });
 
-  await Promise.all([
-    followUser(noimageuser.username, nobiouser.id),
-    followUser(noimageuser.username, maxuser.id),
-    followUser(nobiouser.username, maxuser.id),
-  ]);
+  await followUser(noimageuser.username, nobiouser.id);
+  await followUser(noimageuser.username, maxuser.id);
+  await followUser(nobiouser.username, maxuser.id);
 
   await prisma.tag.createMany({ data: [{ name: 'tag-1' }, { name: 'tag-2' }, { name: 'tag-lonely' }] });
 
@@ -37,18 +35,14 @@ export async function seedDatabase(): Promise<void> {
   const maxArticle = await createArticle({ title: 'Max article', description: 'desc', body: 'body', tagList: ['tag-1', 'tag-2'] }, maxuser.id);
   await createArticle({ title: 'Min article', description: 'desc', body: 'body' }, nobiouser.id);
 
-  await Promise.all([
-    favoriteArticle(noTagsArticle.slug, noimageuser.id),
-    favoriteArticle(noCommentsArticle.slug, maxuser.id),
-    favoriteArticle(maxArticle.slug, maxuser.id),
-    favoriteArticle(maxArticle.slug, noimageuser.id),
-    favoriteArticle(maxArticle.slug, nobiouser.id),
-  ]);
+  await favoriteArticle(noTagsArticle.slug, noimageuser.id);
+  await favoriteArticle(noCommentsArticle.slug, maxuser.id);
+  await favoriteArticle(maxArticle.slug, maxuser.id);
+  await favoriteArticle(maxArticle.slug, noimageuser.id);
+  await favoriteArticle(maxArticle.slug, nobiouser.id);
 
-  await Promise.all([
-    addComment('Nice post', noFavoritesArticle.slug, maxuser.id),
-    addComment('Thanks for sharing', noTagsArticle.slug, noimageuser.id),
-    addComment('Great article!', maxArticle.slug, nobiouser.id),
-    addComment('Interesting read.', maxArticle.slug, maxuser.id),
-  ]);
+  await addComment('Nice post', noFavoritesArticle.slug, maxuser.id);
+  await addComment('Thanks for sharing', noTagsArticle.slug, noimageuser.id);
+  await addComment('Great article!', maxArticle.slug, nobiouser.id);
+  await addComment('Interesting read.', maxArticle.slug, maxuser.id);
 }
