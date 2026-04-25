@@ -1,5 +1,11 @@
 # Versions
 
+## 1.2.0 (2026-04-26)
+
+### 🚀 Features
+
+- Updated environment configuration and Docker setup
+
 ## 1.1.1 (2025-06-29)
 
 ### 🐛 Bug Fixes
