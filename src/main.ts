@@ -72,8 +72,9 @@ app.use(
  * Server activation
  */
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
+const HOST = process.env.HOST || '127.0.0.1';
 
-app.listen(PORT, () => {
-  console.info(`server up on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.info(`server up on port ${PORT} on ${HOST}`);
 });
